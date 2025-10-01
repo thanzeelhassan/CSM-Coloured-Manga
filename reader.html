@@ -86,17 +86,17 @@
       (function () {
         const TOTAL_CHAPTERS = 97;
         const volumes = [
-          { volume: 1, start: 1, end: 9 },
-          { volume: 2, start: 10, end: 18 },
-          { volume: 3, start: 19, end: 27 },
-          { volume: 4, start: 28, end: 36 },
-          { volume: 5, start: 37, end: 45 },
-          { volume: 6, start: 46, end: 54 },
-          { volume: 7, start: 55, end: 63 },
-          { volume: 8, start: 64, end: 72 },
-          { volume: 9, start: 73, end: 81 },
-          { volume: 10, start: 82, end: 89 },
-          { volume: 11, start: 90, end: 97 },
+          { volume: 1, start: 1, end: 7 },
+          { volume: 2, start: 8, end: 16 },
+          { volume: 3, start: 17, end: 25 },
+          { volume: 4, start: 26, end: 34 },
+          { volume: 5, start: 35, end: 43 },
+          { volume: 6, start: 44, end: 52 },
+          { volume: 7, start: 53, end: 61 },
+          { volume: 8, start: 62, end: 70 },
+          { volume: 9, start: 71, end: 79 },
+          { volume: 10, start: 80, end: 88 },
+          { volume: 11, start: 89, end: 97 },
         ];
         const params = new URLSearchParams(location.search);
         let currentChapter = Math.min(
@@ -140,24 +140,65 @@
           col.innerHTML = "";
           const chapterDir = `Chapters/Chapter_${chapter}`;
 
-          // Attempt sequentially from 001.jpg until a miss streak occurs
-          const maxPages = 200; // safety upper bound
+          async function probeImage(src, altText, parentEl) {
+            const img = document.createElement("img");
+            img.alt = altText;
+            img.style.display = "none";
+            parentEl.appendChild(img);
+
+            return await new Promise((resolve) => {
+              let settled = false;
+              const onLoad = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  img.style.display = "block";
+                  resolve({ ok: true, img });
+                }
+              };
+              const onError = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  parentEl.removeChild(img);
+                  resolve({ ok: false, img: null });
+                }
+              };
+              const onTimeout = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  parentEl.removeChild(img);
+                  resolve({ ok: false, img: null });
+                }
+              };
+              const cleanup = () => {
+                img.removeEventListener("load", onLoad);
+                img.removeEventListener("error", onError);
+                clearTimeout(timer);
+              };
+              img.addEventListener("load", onLoad, { once: true });
+              img.addEventListener("error", onError, { once: true });
+              const timer = setTimeout(onTimeout, 15000);
+              img.src = src;
+              if (img.complete) {
+                if (img.naturalWidth > 0) onLoad();
+                else onError();
+              }
+            });
+          }
+
+          // Attempt sequentially from 001.jpg until first miss
+          const maxPages = 100; // safety upper bound
           let foundAny = false;
           for (let i = 1; i <= maxPages; i++) {
             const src = `${chapterDir}/${pad3(i)}.jpg`;
-            const img = document.createElement("img");
-            img.loading = "lazy";
-            img.alt = `Chapter ${chapter} · Page ${i}`;
-            img.src = src;
-
-            const exists = await new Promise((resolve) => {
-              img.addEventListener("load", () => resolve(true), { once: true });
-              img.addEventListener("error", () => resolve(false), {
-                once: true,
-              });
-            });
-
-            if (!exists) {
+            const { ok } = await probeImage(
+              src,
+              `Chapter ${chapter} · Page ${i}`,
+              col
+            );
+            if (!ok) {
               if (i === 1 && !foundAny) {
                 const msg = document.createElement("p");
                 msg.className = "hint";
@@ -167,7 +208,7 @@
               break;
             }
             foundAny = true;
-            col.appendChild(img);
+            // already appended during probe
           }
         }
 
