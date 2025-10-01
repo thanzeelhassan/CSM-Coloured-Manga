@@ -1,0 +1,124 @@
+:root {
+  --bg: #0b0b0b;
+  --text: #e8e8e8;
+  --muted: #a0a0a0;
+  --panel: #151515;
+  --panelHover: #1d1d1d;
+  --border: #2a2a2a;
+  --accent: #ff3b3b;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+a {
+  color: inherit;
+}
+
+.site-header {
+  padding: 16px 16px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.site-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.tagline {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+.back-link {
+  text-decoration: none;
+  color: var(--muted);
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.volume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.volume-card {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+}
+.volume-card img {
+  display: block;
+  width: 100%;
+  height: 260px;
+  object-fit: cover;
+  background: #111;
+}
+.volume-caption {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.volume-card:hover {
+  background: var(--panelHover);
+}
+
+.chapter-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.chapter-item {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  text-decoration: none;
+}
+.chapter-item:hover {
+  background: var(--panelHover);
+}
+
+.site-footer {
+  padding: 16px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+/* Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

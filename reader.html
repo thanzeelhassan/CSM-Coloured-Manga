@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reader · CSM Manga</title>
+    <link rel="icon" href="img/Favicon.png" sizes="any" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Minimal reader-specific helpers */
+      .img-col {
+        max-width: 980px;
+        margin: 0 auto;
+      }
+      .img-col img {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 0 16px 0;
+        background: #111;
+      }
+      .nav-bar {
+        position: sticky;
+        top: 0;
+        background: var(--bg);
+        z-index: 10;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-bottom {
+        margin: 24px 0 40px;
+      }
+      .nav-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .nav-actions a,
+      .nav-actions button {
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        text-decoration: none;
+      }
+      .nav-actions a:hover,
+      .nav-actions button:hover {
+        background: var(--panelHover);
+      }
+      .chapter-title {
+        text-align: center;
+        margin: 4px 0 8px;
+        font-weight: 600;
+      }
+      .hint {
+        text-align: center;
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header nav-bar">
+      <a class="back-link" id="backToVolume" href="index.html">← Volumes</a>
+      <h1 id="chapterTitle" class="chapter-title">Chapter</h1>
+      <div class="nav-actions">
+        <a id="prevTop" href="#">⟨ Prev</a>
+        <a id="nextTop" href="#">Next ⟩</a>
+      </div>
+      <div class="hint">
+        Use ←/→ or A/D to change chapters; Home/End to jump
+      </div>
+    </header>
+    <main class="container img-col" id="imageColumn" aria-live="polite"></main>
+    <footer class="site-footer nav-bottom">
+      <div class="nav-actions">
+        <a id="prevBottom" href="#">⟨ Prev</a>
+        <a id="nextBottom" href="#">Next ⟩</a>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        const TOTAL_CHAPTERS = 97;
+        const volumes = [
+          { volume: 1, start: 1, end: 9 },
+          { volume: 2, start: 10, end: 18 },
+          { volume: 3, start: 19, end: 27 },
+          { volume: 4, start: 28, end: 36 },
+          { volume: 5, start: 37, end: 45 },
+          { volume: 6, start: 46, end: 54 },
+          { volume: 7, start: 55, end: 63 },
+          { volume: 8, start: 64, end: 72 },
+          { volume: 9, start: 73, end: 81 },
+          { volume: 10, start: 82, end: 89 },
+          { volume: 11, start: 90, end: 97 },
+        ];
+        const params = new URLSearchParams(location.search);
+        let currentChapter = Math.min(
+          TOTAL_CHAPTERS,
+          Math.max(1, parseInt(params.get("c") || "1", 10))
+        );
+
+        function findVolumeByChapter(ch) {
+          return (
+            volumes.find((v) => ch >= v.start && ch <= v.end) || volumes[0]
+          );
+        }
+
+        function pad3(n) {
+          return String(n).padStart(3, "0");
+        }
+
+        function buildNavLinks() {
+          const prev = Math.max(1, currentChapter - 1);
+          const next = Math.min(TOTAL_CHAPTERS, currentChapter + 1);
+          const set = (id, ch) =>
+            (document.getElementById(id).href = `reader.html?c=${ch}`);
+          set("prevTop", prev);
+          set("nextTop", next);
+          set("prevBottom", prev);
+          set("nextBottom", next);
+
+          const vol = findVolumeByChapter(currentChapter);
+          const back = document.getElementById("backToVolume");
+          back.href = `volume.html?v=${vol.volume}`;
+        }
+
+        function setTitle() {
+          const h = document.getElementById("chapterTitle");
+          h.textContent = `Chapter ${currentChapter}`;
+          document.title = `Chapter ${currentChapter} · CSM Reader`;
+        }
+
+        async function loadImagesForChapter(chapter) {
+          const col = document.getElementById("imageColumn");
+          col.innerHTML = "";
+          const chapterDir = `Chapters/Chapter_${chapter}`;
+
+          // Attempt sequentially from 001.jpg until a miss streak occurs
+          const maxPages = 200; // safety upper bound
+          let foundAny = false;
+          for (let i = 1; i <= maxPages; i++) {
+            const src = `${chapterDir}/${pad3(i)}.jpg`;
+            const img = document.createElement("img");
+            img.loading = "lazy";
+            img.alt = `Chapter ${chapter} · Page ${i}`;
+            img.src = src;
+
+            const exists = await new Promise((resolve) => {
+              img.addEventListener("load", () => resolve(true), { once: true });
+              img.addEventListener("error", () => resolve(false), {
+                once: true,
+              });
+            });
+
+            if (!exists) {
+              if (i === 1 && !foundAny) {
+                const msg = document.createElement("p");
+                msg.className = "hint";
+                msg.textContent = "No images found for this chapter.";
+                col.appendChild(msg);
+              }
+              break;
+            }
+            foundAny = true;
+            col.appendChild(img);
+          }
+        }
+
+        function onKey(e) {
+          if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName))
+            return;
+          if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") {
+            if (currentChapter > 1)
+              location.href = `reader.html?c=${currentChapter - 1}`;
+          } else if (e.key === "ArrowRight" || e.key.toLowerCase() === "d") {
+            if (currentChapter < TOTAL_CHAPTERS)
+              location.href = `reader.html?c=${currentChapter + 1}`;
+          } else if (e.key === "Home") {
+            location.href = `reader.html?c=1`;
+          } else if (e.key === "End") {
+            location.href = `reader.html?c=${TOTAL_CHAPTERS}`;
+          }
+        }
+
+        setTitle();
+        buildNavLinks();
+        loadImagesForChapter(currentChapter);
+        window.addEventListener("keydown", onKey);
+      })();
+    </script>
+  </body>
+</html>

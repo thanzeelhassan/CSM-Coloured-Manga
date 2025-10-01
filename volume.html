@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Volume · CSM Manga Reader</title>
+    <link rel="icon" href="img/Favicon.png" sizes="any" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="back-link" href="index.html">← All Volumes</a>
+      <h1 id="volumeTitle">Volume</h1>
+    </header>
+    <main class="container">
+      <section
+        id="chapterList"
+        class="chapter-list"
+        aria-label="Chapters"
+      ></section>
+    </main>
+    <footer class="site-footer">
+      <a href="index.html">Home</a>
+    </footer>
+
+    <script>
+      (function () {
+        const params = new URLSearchParams(location.search);
+        const v = parseInt(params.get("v") || "1", 10);
+        const volumes = [
+          { volume: 1, start: 1, end: 7 },
+          { volume: 2, start: 8, end: 16 },
+          { volume: 3, start: 17, end: 25 },
+          { volume: 4, start: 26, end: 34 },
+          { volume: 5, start: 35, end: 43 },
+          { volume: 6, start: 44, end: 52 },
+          { volume: 7, start: 53, end: 61 },
+          { volume: 8, start: 62, end: 70 },
+          { volume: 9, start: 71, end: 79 },
+          { volume: 10, start: 80, end: 88 },
+          { volume: 11, start: 89, end: 97 },
+        ];
+        const vol = volumes.find((x) => x.volume === v) || volumes[0];
+        document.getElementById(
+          "volumeTitle"
+        ).textContent = `Volume ${vol.volume}`;
+
+        const list = document.getElementById("chapterList");
+        for (let ch = vol.start; ch <= vol.end; ch++) {
+          const a = document.createElement("a");
+          a.className = "chapter-item";
+          a.href = `reader.html?c=${ch}`;
+          a.textContent = `Chapter ${ch}`;
+          list.appendChild(a);
+        }
+      })();
+    </script>
+  </body>
+</html>

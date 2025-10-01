@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSM Manga Reader</title>
+    <meta
+      name="description"
+      content="Chainsaw Man colored manga reader. Browse by volume and read chapters in a vertical layout."
+    />
+    <link rel="icon" href="img/Favicon.png" sizes="any" />
+    <link rel="apple-touch-icon" href="img/Favicon.png" />
+    <meta name="theme-color" content="#111111" />
+    <link rel="preload" as="image" href="img/volume00.jpg" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1>CSM Colored Manga</h1>
+      <p class="tagline">Select a volume to start reading</p>
+    </header>
+    <main class="container">
+      <section
+        class="volume-grid"
+        id="volumeGrid"
+        aria-label="Volumes"
+      ></section>
+    </main>
+    <footer class="site-footer">
+      <a href="https://github.com/" target="_blank" rel="noopener">Source</a>
+    </footer>
+
+    <script>
+      (function () {
+        const volumes = [
+          { volume: 1, start: 1, end: 9 },
+          { volume: 2, start: 10, end: 18 },
+          { volume: 3, start: 19, end: 27 },
+          { volume: 4, start: 28, end: 36 },
+          { volume: 5, start: 37, end: 45 },
+          { volume: 6, start: 46, end: 54 },
+          { volume: 7, start: 55, end: 63 },
+          { volume: 8, start: 64, end: 72 },
+          { volume: 9, start: 73, end: 81 },
+          { volume: 10, start: 82, end: 89 },
+          { volume: 11, start: 90, end: 97 },
+        ];
+
+        const grid = document.getElementById("volumeGrid");
+        volumes.forEach((v) => {
+          const item = document.createElement("a");
+          item.className = "volume-card";
+          item.href = `volume.html?v=${v.volume}`;
+          item.setAttribute(
+            "aria-label",
+            `Volume ${v.volume}: Chapters ${v.start} to ${v.end}`
+          );
+
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.alt = `Volume ${v.volume}`;
+          img.src = `Volumes/volume${v.volume}.jpg`;
+
+          const caption = document.createElement("div");
+          caption.className = "volume-caption";
+          caption.textContent = `Volume ${v.volume} · Ch ${v.start}–${v.end}`;
+
+          item.appendChild(img);
+          item.appendChild(caption);
+          grid.appendChild(item);
+        });
+      })();
+    </script>
+  </body>
+</html>
