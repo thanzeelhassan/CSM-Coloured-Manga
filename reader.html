@@ -140,10 +140,11 @@
           col.innerHTML = "";
           const chapterDir = `Chapters/Chapter_${chapter}`;
 
-          async function probeImage(src, altText) {
+          async function probeImage(src, altText, parentEl) {
             const img = document.createElement("img");
-            img.loading = "lazy";
             img.alt = altText;
+            img.style.display = "none";
+            parentEl.appendChild(img);
 
             return await new Promise((resolve) => {
               let settled = false;
@@ -151,6 +152,7 @@
                 if (!settled) {
                   settled = true;
                   cleanup();
+                  img.style.display = "block";
                   resolve({ ok: true, img });
                 }
               };
@@ -158,6 +160,7 @@
                 if (!settled) {
                   settled = true;
                   cleanup();
+                  parentEl.removeChild(img);
                   resolve({ ok: false, img: null });
                 }
               };
@@ -165,6 +168,7 @@
                 if (!settled) {
                   settled = true;
                   cleanup();
+                  parentEl.removeChild(img);
                   resolve({ ok: false, img: null });
                 }
               };
@@ -176,8 +180,7 @@
               img.addEventListener("load", onLoad, { once: true });
               img.addEventListener("error", onError, { once: true });
               const timer = setTimeout(onTimeout, 15000);
-              img.src = src; // set after listeners to avoid missing cached load
-              // Handle already-cached case where complete is true and naturalWidth > 0
+              img.src = src;
               if (img.complete) {
                 if (img.naturalWidth > 0) onLoad();
                 else onError();
@@ -190,9 +193,10 @@
           let foundAny = false;
           for (let i = 1; i <= maxPages; i++) {
             const src = `${chapterDir}/${pad3(i)}.jpg`;
-            const { ok, img } = await probeImage(
+            const { ok } = await probeImage(
               src,
-              `Chapter ${chapter} · Page ${i}`
+              `Chapter ${chapter} · Page ${i}`,
+              col
             );
             if (!ok) {
               if (i === 1 && !foundAny) {
@@ -204,7 +208,7 @@
               break;
             }
             foundAny = true;
-            col.appendChild(img);
+            // already appended during probe
           }
         }
 
