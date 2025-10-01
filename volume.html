@@ -50,7 +50,18 @@
           const a = document.createElement("a");
           a.className = "chapter-item";
           a.href = `reader.html?c=${ch}`;
-          a.textContent = `Chapter ${ch}`;
+
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.alt = `Chapter ${ch} preview`;
+          img.src = `Chapters/Chapter_${ch}/001.jpg`;
+
+          const label = document.createElement("div");
+          label.className = "chapter-label";
+          label.textContent = `Chapter ${ch}`;
+
+          a.appendChild(img);
+          a.appendChild(label);
           list.appendChild(a);
         }
       })();
