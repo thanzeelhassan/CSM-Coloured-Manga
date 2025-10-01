@@ -86,7 +86,7 @@
       (function () {
         const TOTAL_CHAPTERS = 97;
         const volumes = [
-        { volume: 1, start: 1, end: 7 },
+          { volume: 1, start: 1, end: 7 },
           { volume: 2, start: 8, end: 16 },
           { volume: 3, start: 17, end: 25 },
           { volume: 4, start: 26, end: 34 },
@@ -140,24 +140,61 @@
           col.innerHTML = "";
           const chapterDir = `Chapters/Chapter_${chapter}`;
 
-          // Attempt sequentially from 001.jpg until a miss streak occurs
-          const maxPages = 200; // safety upper bound
+          async function probeImage(src, altText) {
+            const img = document.createElement("img");
+            img.loading = "lazy";
+            img.alt = altText;
+
+            return await new Promise((resolve) => {
+              let settled = false;
+              const onLoad = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  resolve({ ok: true, img });
+                }
+              };
+              const onError = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  resolve({ ok: false, img: null });
+                }
+              };
+              const onTimeout = () => {
+                if (!settled) {
+                  settled = true;
+                  cleanup();
+                  resolve({ ok: false, img: null });
+                }
+              };
+              const cleanup = () => {
+                img.removeEventListener("load", onLoad);
+                img.removeEventListener("error", onError);
+                clearTimeout(timer);
+              };
+              img.addEventListener("load", onLoad, { once: true });
+              img.addEventListener("error", onError, { once: true });
+              const timer = setTimeout(onTimeout, 15000);
+              img.src = src; // set after listeners to avoid missing cached load
+              // Handle already-cached case where complete is true and naturalWidth > 0
+              if (img.complete) {
+                if (img.naturalWidth > 0) onLoad();
+                else onError();
+              }
+            });
+          }
+
+          // Attempt sequentially from 001.jpg until first miss
+          const maxPages = 100; // safety upper bound
           let foundAny = false;
           for (let i = 1; i <= maxPages; i++) {
             const src = `${chapterDir}/${pad3(i)}.jpg`;
-            const img = document.createElement("img");
-            img.loading = "lazy";
-            img.alt = `Chapter ${chapter} · Page ${i}`;
-            img.src = src;
-
-            const exists = await new Promise((resolve) => {
-              img.addEventListener("load", () => resolve(true), { once: true });
-              img.addEventListener("error", () => resolve(false), {
-                once: true,
-              });
-            });
-
-            if (!exists) {
+            const { ok, img } = await probeImage(
+              src,
+              `Chapter ${chapter} · Page ${i}`
+            );
+            if (!ok) {
               if (i === 1 && !foundAny) {
                 const msg = document.createElement("p");
                 msg.className = "hint";
